@@ -19,7 +19,7 @@ responsibility, and tracks each one from open to resolved.
 - Python 3.10 or newer (standard library only; no external packages).
 - Clone the repository, then from the project root:
 
-  python3 main.py
+  python3 -m campusflow.main
 
 No virtual environment is strictly required, but if you prefer one:
 
@@ -28,7 +28,7 @@ No virtual environment is strictly required, but if you prefer one:
 
 ## Running the CLI
 
-Run `python3 main.py`. On startup, CampusFlow loads existing tickets from
+Run `python3 -m campusflow.main`. On startup, CampusFlow loads existing tickets from
 data/tickets.json (a missing file starts a fresh, empty collection). The
 menu offers:
 
