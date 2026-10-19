@@ -1,5 +1,5 @@
 from campusflow.tickets import create_ticket, search_tickets
-from campusflow.workflow import (
+from campusflow.workflow import (, stale_tickets
     get_ticket,
     assign_ticket,
     start_ticket,
@@ -154,6 +154,19 @@ def display_reports(tickets):
         print(f"  {row['category']}: {row['count']} ({row['share']}%)")
 
 
+def display_stale_tickets(tickets):
+    stale = stale_tickets(tickets)
+
+    if not stale:
+        print("\nNo stale tickets — nothing has been open for 7+ days.")
+        return
+
+    print(f"\n--- Stale Tickets (open {len(stale)}, 7+ days old) ---")
+    for ticket in stale:
+        print(f"\n{ticket['id']} [{ticket['priority']}] {ticket['title']}")
+        print(f"   opened {ticket['created_at']} | category: {ticket['category']}")
+
+
 def display_menu():
     print("\n========== CAMPUSFLOW ==========")
     print("1. Create ticket")
@@ -165,7 +178,8 @@ def display_menu():
     print("7. Resolve ticket")
     print("8. Reopen ticket")
     print("9. View reports")
-    print("10. Exit")
+    print("10. View stale tickets (open 7+ days)")
+    print("11. Exit")
     print("================================")
 
 
@@ -180,7 +194,7 @@ def main():
 
     while True:
         display_menu()
-        choice = input("Choose an option (1-10): ").strip()
+        choice = input("Choose an option (1-11): ").strip()
 
         try:
             if choice == "1":
@@ -211,11 +225,14 @@ def main():
                 display_reports(tickets)
 
             elif choice == "10":
+                display_stale_tickets(tickets)
+
+            elif choice == "11":
                 print("Thanks for using CampusFlow. Goodbye!")
                 break
 
             else:
-                print("Invalid option. Choose a number from 1 to 10.")
+                print("Invalid option. Choose a number from 1 to 11.")
 
         except (ValueError, OSError) as error:
             print(f"Error: {error}")

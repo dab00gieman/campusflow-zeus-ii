@@ -1,4 +1,5 @@
 import unittest
+from datetime import date
 from campusflow.tickets import (
     calculate_priority,
     next_id,
@@ -70,3 +71,15 @@ class TestSearchTickets(unittest.TestCase):
 
     def test_no_match_returns_empty_list(self):
         self.assertEqual(search_tickets(self._sample(), "zebra"), [])
+
+
+class TestCreatedAtStamp(unittest.TestCase):
+    def test_new_tickets_get_today_date(self):
+        tickets = []
+        ticket = create_ticket("WiFi down", "Network", "high", 12, tickets)
+        self.assertEqual(ticket["created_at"], date.today().isoformat())
+
+    def test_stamp_format_round_trips(self):
+        tickets = []
+        ticket = create_ticket("Slow laptop", "Hardware", "low", 1, tickets)
+        date.fromisoformat(ticket["created_at"])  # raises if malformed

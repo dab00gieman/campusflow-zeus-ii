@@ -1,3 +1,6 @@
+from datetime import date
+
+
 def calculate_priority(urgency, affected_users):
     if urgency == "high" and affected_users >= 10:
         return "critical"
@@ -50,7 +53,8 @@ def create_ticket(title, category, urgency, affected_users, tickets):
         "affected_users": affected_users,
         "priority": calculate_priority(urgency, affected_users),
         "status": "open",
-        "assigned_to": None
+        "assigned_to": None,
+        "created_at": date.today().isoformat()
     }
 
     tickets.append(ticket)
