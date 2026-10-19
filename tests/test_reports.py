@@ -1,5 +1,5 @@
 import unittest
-from campusflow.reports import report_summary
+from campusflow.reports import report_summary, report_by_category
 
 class TestReports(unittest.TestCase):
     def test_summary_with_tickets(self):
@@ -48,3 +48,28 @@ class TestReports(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class TestReportByCategory(unittest.TestCase):
+    def test_counts_and_shares(self):
+        tickets = [
+            {"id": "T001", "category": "Network", "status": "open"},
+            {"id": "T002", "category": "Network", "status": "resolved"},
+            {"id": "T003", "category": "Hardware", "status": "open"},
+        ]
+        rows = report_by_category(tickets)
+        self.assertEqual(rows[0], {"category": "Network", "count": 2, "share": 66.7})
+        self.assertEqual(rows[1]["category"], "Hardware")
+        self.assertEqual(rows[1]["share"], 33.3)
+
+    def test_ties_break_alphabetically(self):
+        tickets = [
+            {"id": "T001", "category": "Other", "status": "open"},
+            {"id": "T002", "category": "Hardware", "status": "open"},
+        ]
+        self.assertEqual(
+            [row["category"] for row in report_by_category(tickets)],
+            ["Hardware", "Other"],
+        )
+
+    def test_empty_list_returns_no_rows(self):
+        self.assertEqual(report_by_category([]), [])

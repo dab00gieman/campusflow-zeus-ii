@@ -7,7 +7,7 @@ from campusflow.workflow import (
     reopen_ticket,
     work_queue,
 )
-from campusflow.reports import report_summary
+from campusflow.reports import report_summary, report_by_category
 from campusflow.storage import load_tickets, save_tickets
 
 
@@ -148,6 +148,10 @@ def display_reports(tickets):
     print("\nTickets by priority:")
     for priority, count in report["by_priority"].items():
         print(f"  {priority}: {count}")
+
+    print("\nTickets by category:")
+    for row in report_by_category(tickets):
+        print(f"  {row['category']}: {row['count']} ({row['share']}%)")
 
 
 def display_menu():
