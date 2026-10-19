@@ -57,3 +57,30 @@ def create_ticket(title, category, urgency, affected_users, tickets):
 
     return ticket
 
+
+
+def search_tickets(tickets, query, status=None):
+    """Return tickets whose title or category contains the query.
+
+    Matching is case-insensitive. An optional status
+    ("open", "in_progress", "resolved") filters the results.
+    """
+    if not isinstance(query, str) or not query.strip():
+        raise ValueError("Search query cannot be empty")
+
+    needle = query.strip().lower()
+    results = [
+        ticket
+        for ticket in tickets
+        if needle in ticket["title"].lower()
+        or needle in ticket["category"].lower()
+    ]
+
+    if status is not None:
+        if status not in ("open", "in_progress", "resolved"):
+            raise ValueError("Invalid status filter")
+        results = [
+            ticket for ticket in results if ticket["status"] == status
+        ]
+
+    return results

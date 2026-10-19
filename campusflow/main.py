@@ -1,4 +1,4 @@
-from campusflow.tickets import create_ticket
+from campusflow.tickets import create_ticket, search_tickets
 from campusflow.workflow import (
     get_ticket,
     assign_ticket,
@@ -97,6 +97,26 @@ def reopen_existing_ticket(tickets):
     print(f"\nTicket {ticket_id} has been reopened.")
 
 
+def search_for_tickets(tickets):
+    query = input("Search (title or category): ").strip()
+    status = (
+        input("Status filter (open/in_progress/resolved, blank for all): ")
+        .strip()
+        .lower()
+        or None
+    )
+
+    results = search_tickets(tickets, query, status)
+
+    if not results:
+        print("\nNo tickets matched your search.")
+        return
+
+    print(f"\n{len(results)} ticket(s) matched:")
+    for ticket in results:
+        display_ticket(ticket)
+
+
 def display_work_queue(tickets):
     queue = work_queue(tickets)
 
@@ -134,13 +154,14 @@ def display_menu():
     print("\n========== CAMPUSFLOW ==========")
     print("1. Create ticket")
     print("2. List all tickets")
-    print("3. View work queue")
-    print("4. Assign ticket")
-    print("5. Start ticket")
-    print("6. Resolve ticket")
-    print("7. Reopen ticket")
-    print("8. View reports")
-    print("9. Exit")
+    print("3. Search tickets")
+    print("4. View work queue")
+    print("5. Assign ticket")
+    print("6. Start ticket")
+    print("7. Resolve ticket")
+    print("8. Reopen ticket")
+    print("9. View reports")
+    print("10. Exit")
     print("================================")
 
 
@@ -155,7 +176,7 @@ def main():
 
     while True:
         display_menu()
-        choice = input("Choose an option (1-9): ").strip()
+        choice = input("Choose an option (1-10): ").strip()
 
         try:
             if choice == "1":
@@ -165,29 +186,32 @@ def main():
                 list_tickets(tickets)
 
             elif choice == "3":
-                display_work_queue(tickets)
+                search_for_tickets(tickets)
 
             elif choice == "4":
-                assign_existing_ticket(tickets)
+                display_work_queue(tickets)
 
             elif choice == "5":
-                start_existing_ticket(tickets)
+                assign_existing_ticket(tickets)
 
             elif choice == "6":
-                resolve_existing_ticket(tickets)
+                start_existing_ticket(tickets)
 
             elif choice == "7":
-                reopen_existing_ticket(tickets)
+                resolve_existing_ticket(tickets)
 
             elif choice == "8":
-                display_reports(tickets)
+                reopen_existing_ticket(tickets)
 
             elif choice == "9":
+                display_reports(tickets)
+
+            elif choice == "10":
                 print("Thanks for using CampusFlow. Goodbye!")
                 break
 
             else:
-                print("Invalid option. Choose a number from 1 to 9.")
+                print("Invalid option. Choose a number from 1 to 10.")
 
         except (ValueError, OSError) as error:
             print(f"Error: {error}")
