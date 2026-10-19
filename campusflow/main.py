@@ -1,5 +1,6 @@
 from campusflow.tickets import create_ticket, search_tickets
-from campusflow.workflow import (, stale_tickets
+from campusflow.workflow import (
+    stale_tickets,
     get_ticket,
     assign_ticket,
     start_ticket,
