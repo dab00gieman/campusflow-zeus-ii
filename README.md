@@ -105,3 +105,22 @@ data.
   (Michael; reviewed and approved by Temple-Daemon)
   TODO: add PR link
 
+## Troubleshooting
+
+- **"Could not load ticket data: Invalid ticket data"** — `data/tickets.json`
+  is present but is not a list of ticket objects. Fix the JSON by hand
+  (it should be a list like `[{...}, {...}]`), or rename it and let
+  CampusFlow start fresh.
+- **"Invalid option. Choose a number from 1 to 10."** — the menu grew;
+  re-check the printed numbers after pulling the latest main.
+- **Priority never comes out as expected** — priority is derived:
+  critical needs `high` urgency **and** 10+ affected users. See
+  `docs/ARCHITECTURE.md` for the full rule.
+- **Python version errors on startup** — CampusFlow targets Python 3.10+;
+  check with `python3 --version`.
+
+## Data
+
+Tickets live in `data/tickets.json` (created on first save). The file is
+safe to edit while the app is closed; saves are atomic, so an interrupted
+run never leaves a half-written store.
