@@ -1,4 +1,5 @@
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -53,3 +54,31 @@ class TestStorage(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class TestAtomicSave(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.path = os.path.join(self.tmp.name, "data", "tickets.json")
+        self.addCleanup(self.tmp.cleanup)
+
+    def test_save_leaves_no_temp_file(self):
+        save_tickets([], self.path)
+        self.assertFalse(os.path.exists(self.path + ".tmp"))
+
+    def test_overwrite_keeps_data_valid(self):
+        first = [{"id": "T001", "title": "old", "status": "open"}]
+        save_tickets(first, self.path)
+        save_tickets([], self.path)
+        self.assertEqual(load_tickets(self.path), [])
+
+    def test_roundtrip_preserves_every_field(self):
+        ticket = {
+            "id": "T001",
+            "title": "WiFi down",
+            "category": "Network",
+            "priority": "critical",
+            "status": "open",
+            "assigned_to": None,
+        }
+        save_tickets([ticket], self.path)
+        self.assertEqual(load_tickets(self.path)[0]["title"], "WiFi down")
