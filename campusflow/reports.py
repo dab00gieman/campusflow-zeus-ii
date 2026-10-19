@@ -21,3 +21,23 @@ def report_summary(tickets):
         "by_status": status_counts,
         "by_priority": priority_counts
     }
+
+
+def report_by_category(tickets):
+    """Count tickets per category, highest first, with share of total."""
+    counts = {}
+    for ticket in tickets:
+        category = ticket["category"]
+        counts[category] = counts.get(category, 0) + 1
+
+    total = len(tickets)
+    rows = [
+        {
+            "category": category,
+            "count": count,
+            "share": round(count / total * 100, 1) if total else 0.0,
+        }
+        for category, count in counts.items()
+    ]
+    rows.sort(key=lambda row: (-row["count"], row["category"]))
+    return rows
