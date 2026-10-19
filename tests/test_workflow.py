@@ -1,5 +1,7 @@
+from datetime import date
 import unittest
 from campusflow.workflow import (
+    stale_tickets,
     get_ticket,
     assign_ticket,
     start_ticket,
@@ -72,3 +74,33 @@ class TestWorkflow(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class TestStaleTickets(unittest.TestCase):
+    def _ticket(self, **over):
+        base = {"id": "T001", "status": "open", "created_at": "2026-10-01"}
+        base.update(over)
+        return base
+
+    def test_old_open_ticket_is_stale(self):
+        stale = stale_tickets([self._ticket()], 7, today=date(2026, 10, 19))
+        self.assertEqual([t["id"] for t in stale], ["T001"])
+
+    def test_resolved_old_ticket_is_not_stale(self):
+        stale = stale_tickets([self._ticket(status="resolved")], 7, today=date(2026, 10, 19))
+        self.assertEqual(stale, [])
+
+    def test_fresh_ticket_is_not_stale(self):
+        stale = stale_tickets([self._ticket(created_at="2026-10-18")], 7, today=date(2026, 10, 19))
+        self.assertEqual(stale, [])
+
+    def test_tickets_without_date_are_never_stale(self):
+        ticket = self._ticket()
+        del ticket["created_at"]
+        stale = stale_tickets([ticket], 7, today=date(2026, 10, 19))
+        self.assertEqual(stale, [])
+
+    def test_oldest_first_ordering(self):
+        tickets = [self._ticket(id="T002", created_at="2026-09-20"),
+                   self._ticket(id="T001", created_at="2026-10-05")]
+        stale = stale_tickets(tickets, 7, today=date(2026, 10, 19))
+        self.assertEqual([t["id"] for t in stale], ["T002", "T001"])

@@ -1,3 +1,6 @@
+from datetime import date
+
+
 def get_ticket(tickets, ticket_id):
     for ticket in tickets:
         if ticket["id"] == ticket_id:
@@ -51,3 +54,20 @@ def work_queue(tickets):
             int(ticket["id"][1:])
         )
     )
+
+def stale_tickets(tickets, days=7, today=None):
+    """Return open tickets older than `days`, oldest first.
+
+    Tickets saved before created_at existed are treated as
+    not stale — unknown age is not evidence of neglect.
+    """
+    today = today or date.today()
+    stale = []
+    for ticket in tickets:
+        if ticket["status"] != "open" or "created_at" not in ticket:
+            continue
+        age = (today - date.fromisoformat(ticket["created_at"])).days
+        if age >= days:
+            stale.append((age, ticket))
+    stale.sort(key=lambda item: item[0], reverse=True)
+    return [ticket for _, ticket in stale]
