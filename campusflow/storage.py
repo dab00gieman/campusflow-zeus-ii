@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 
 
@@ -27,6 +28,9 @@ def save_tickets(tickets, path):
     file_path = Path(path)
     file_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with file_path.open("w", encoding="utf-8") as file:
+    temp_path = file_path.with_name(file_path.name + ".tmp")
+    with temp_path.open("w", encoding="utf-8") as file:
         json.dump(tickets, file, indent=2)
         file.write("\n")
+
+    os.replace(temp_path, file_path)
