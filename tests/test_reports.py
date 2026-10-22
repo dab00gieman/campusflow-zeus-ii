@@ -1,5 +1,6 @@
 import unittest
-from campusflow.reports import report_summary, report_by_category
+from campusflow.reports import (
+    report_by_assignee, report_summary, report_by_category)
 
 class TestReports(unittest.TestCase):
     def test_summary_with_tickets(self):
@@ -73,3 +74,30 @@ class TestReportByCategory(unittest.TestCase):
 
     def test_empty_list_returns_no_rows(self):
         self.assertEqual(report_by_category([]), [])
+
+
+class ReportByAssigneeTest(unittest.TestCase):
+    def _ticket(self, staff, status, title="t"):
+        return {"id": 1, "title": title, "category": "access",
+                "priority": "medium", "status": status,
+                "assigned_to": staff, "created_at": "2026-10-01T00:00:00"}
+
+    def test_counts_and_active_load_ordering(self):
+        rows = report_by_assignee([
+            self._ticket("ada", "open"), self._ticket("ada", "resolved"),
+            self._ticket("bo", "open"), self._ticket("bo", "in_progress"),
+            self._ticket("bo", "in_progress"),
+        ])
+        self.assertEqual([r["staff"] for r in rows], ["bo", "ada"])
+        self.assertEqual(rows[0]["open"], 1)
+        self.assertEqual(rows[0]["in_progress"], 2)
+        self.assertEqual(rows[1]["resolved"], 1)
+
+    def test_unassigned_excluded(self):
+        t = self._ticket(None, "open")
+        self.assertEqual(report_by_assignee([t]), [])
+
+    def test_ties_break_alphabetically(self):
+        rows = report_by_assignee([
+            self._ticket("zoe", "open"), self._ticket("ada", "open")])
+        self.assertEqual([r["staff"] for r in rows], ["ada", "zoe"])
