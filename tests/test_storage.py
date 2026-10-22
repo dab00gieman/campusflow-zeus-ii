@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from campusflow.storage import load_tickets, save_tickets
+from campusflow.storage import export_tickets_csv, load_tickets, save_tickets
 
 
 class TestStorage(unittest.TestCase):
@@ -82,3 +82,29 @@ class TestAtomicSave(unittest.TestCase):
         }
         save_tickets([ticket], self.path)
         self.assertEqual(load_tickets(self.path)[0]["title"], "WiFi down")
+
+
+class ExportTicketsCsvTest(unittest.TestCase):
+    TICKET = {"id": 7, "title": "Wireless, room 4", "category": "network",
+              "priority": "high", "status": "open", "assigned_to": "ada",
+              "created_at": "2026-10-20T09:00:00", "extra_key": "ignored"}
+
+    def test_round_trip_and_quoting(self):
+        import csv as csv_mod
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "out.csv"
+            count = export_tickets_csv([self.TICKET], path)
+            self.assertEqual(count, 1)
+            with path.open(encoding="utf-8", newline="") as file:
+                rows = list(csv_mod.DictReader(file))
+            self.assertEqual(len(rows), 1)
+            self.assertEqual(rows[0]["title"], "Wireless, room 4")
+            self.assertEqual(rows[0]["id"], "7")
+            self.assertNotIn("extra_key", rows[0])
+
+    def test_empty_export_writes_header_only(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "sub" / "out.csv"
+            self.assertEqual(export_tickets_csv([], path), 0)
+            self.assertEqual(path.read_text(encoding="utf-8").splitlines(),
+                             ["id,title,category,priority,status,assigned_to,created_at"])

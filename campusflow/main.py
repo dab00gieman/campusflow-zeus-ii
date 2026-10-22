@@ -9,7 +9,7 @@ from campusflow.workflow import (
     work_queue,
 )
 from campusflow.reports import report_summary, report_by_category, report_by_assignee
-from campusflow.storage import load_tickets, save_tickets
+from campusflow.storage import export_tickets_csv, load_tickets, save_tickets
 
 
 DATA_PATH = "data/tickets.json"
@@ -155,6 +155,12 @@ def display_reports(tickets):
         print(f"  {row['category']}: {row['count']} ({row['share']}%)")
 
 
+def export_tickets_to_csv(tickets):
+    path = input("Export path (default data/tickets.csv): ").strip() or "data/tickets.csv"
+    count = export_tickets_csv(tickets, path)
+    print(f"\nExported {count} ticket(s) to {path}.")
+
+
 def display_workload(tickets):
     rows = report_by_assignee(tickets)
 
@@ -196,7 +202,8 @@ def display_menu():
     print("9. View reports")
     print("10. View stale tickets (open 7+ days)")
     print("11. View staff workload")
-    print("12. Exit")
+    print("12. Export tickets to CSV")
+    print("13. Exit")
     print("================================")
 
 
@@ -211,7 +218,7 @@ def main():
 
     while True:
         display_menu()
-        choice = input("Choose an option (1-12): ").strip()
+        choice = input("Choose an option (1-13): ").strip()
 
         try:
             if choice == "1":
@@ -248,11 +255,14 @@ def main():
                 display_workload(tickets)
 
             elif choice == "12":
+                export_tickets_to_csv(tickets)
+
+            elif choice == "13":
                 print("Thanks for using CampusFlow. Goodbye!")
                 break
 
             else:
-                print("Invalid option. Choose a number from 1 to 12.")
+                print("Invalid option. Choose a number from 1 to 13.")
 
         except (ValueError, OSError) as error:
             print(f"Error: {error}")

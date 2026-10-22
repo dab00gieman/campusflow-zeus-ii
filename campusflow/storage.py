@@ -34,3 +34,32 @@ def save_tickets(tickets, path):
         file.write("\n")
 
     os.replace(temp_path, file_path)
+
+
+def export_tickets_csv(tickets, path):
+    """Write tickets to path as CSV, one row per ticket.
+
+    Returns the number of rows written. Fieldnames follow the ticket
+    schema; unknown extra keys are ignored, and csv quoting keeps
+    titles with commas intact.
+    """
+    file_path = Path(path)
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+
+    fields = [
+        "id",
+        "title",
+        "category",
+        "priority",
+        "status",
+        "assigned_to",
+        "created_at",
+    ]
+    import csv
+
+    with file_path.open("w", encoding="utf-8", newline="") as file:
+        writer = csv.DictWriter(file, fieldnames=fields, extrasaction="ignore")
+        writer.writeheader()
+        writer.writerows(tickets)
+
+    return len(tickets)
