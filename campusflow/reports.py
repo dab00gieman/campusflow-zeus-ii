@@ -41,3 +41,24 @@ def report_by_category(tickets):
     ]
     rows.sort(key=lambda row: (-row["count"], row["category"]))
     return rows
+
+
+def report_by_assignee(tickets):
+    """Per-staff workload: status counts for every assigned ticket.
+
+    Rows are sorted by active load (open + in_progress) so the most
+    loaded staff member is first. Unassigned tickets are excluded —
+    the work queue is where those live.
+    """
+    load = {}
+    for ticket in tickets:
+        staff = ticket.get("assigned_to")
+        if not staff:
+            continue
+        row = load.setdefault(
+            staff, {"staff": staff, "open": 0, "in_progress": 0, "resolved": 0})
+        if ticket["status"] in row:
+            row[ticket["status"]] += 1
+    rows = list(load.values())
+    rows.sort(key=lambda row: (-(row["open"] + row["in_progress"]), row["staff"]))
+    return rows

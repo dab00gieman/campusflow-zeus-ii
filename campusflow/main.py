@@ -8,7 +8,7 @@ from campusflow.workflow import (
     reopen_ticket,
     work_queue,
 )
-from campusflow.reports import report_summary, report_by_category
+from campusflow.reports import report_summary, report_by_category, report_by_assignee
 from campusflow.storage import load_tickets, save_tickets
 
 
@@ -155,6 +155,21 @@ def display_reports(tickets):
         print(f"  {row['category']}: {row['count']} ({row['share']}%)")
 
 
+def display_workload(tickets):
+    rows = report_by_assignee(tickets)
+
+    if not rows:
+        print("\nNo assigned tickets — nothing to show for staff workload.")
+        return
+
+    print("\n--- Staff Workload (most loaded first) ---")
+    for row in rows:
+        active = row["open"] + row["in_progress"]
+        print(f"\n{row['staff']}: {active} active "
+              f"({row['open']} open, {row['in_progress']} in progress, "
+              f"{row['resolved']} resolved)")
+
+
 def display_stale_tickets(tickets):
     stale = stale_tickets(tickets)
 
@@ -180,7 +195,8 @@ def display_menu():
     print("8. Reopen ticket")
     print("9. View reports")
     print("10. View stale tickets (open 7+ days)")
-    print("11. Exit")
+    print("11. View staff workload")
+    print("12. Exit")
     print("================================")
 
 
@@ -195,7 +211,7 @@ def main():
 
     while True:
         display_menu()
-        choice = input("Choose an option (1-11): ").strip()
+        choice = input("Choose an option (1-12): ").strip()
 
         try:
             if choice == "1":
@@ -229,11 +245,14 @@ def main():
                 display_stale_tickets(tickets)
 
             elif choice == "11":
+                display_workload(tickets)
+
+            elif choice == "12":
                 print("Thanks for using CampusFlow. Goodbye!")
                 break
 
             else:
-                print("Invalid option. Choose a number from 1 to 11.")
+                print("Invalid option. Choose a number from 1 to 12.")
 
         except (ValueError, OSError) as error:
             print(f"Error: {error}")
