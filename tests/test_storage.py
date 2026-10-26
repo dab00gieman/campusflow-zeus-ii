@@ -102,9 +102,20 @@ class ExportTicketsCsvTest(unittest.TestCase):
             self.assertEqual(rows[0]["id"], "7")
             self.assertNotIn("extra_key", rows[0])
 
+    def test_export_includes_due_date_column(self):
+        tickets = [{"id": "T001", "title": "t", "category": "Other", "priority": "low",
+                    "status": "open", "assigned_to": None, "created_at": "2026-10-26",
+                    "due_date": "2026-11-01"}]
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "out.csv")
+            export_tickets_csv(tickets, path)
+            with open(path, encoding="utf-8") as f:
+                header = f.readline().strip().split(",")
+        self.assertIn("due_date", header)
+
     def test_empty_export_writes_header_only(self):
         with tempfile.TemporaryDirectory() as td:
             path = Path(td) / "sub" / "out.csv"
             self.assertEqual(export_tickets_csv([], path), 0)
             self.assertEqual(path.read_text(encoding="utf-8").splitlines(),
-                             ["id,title,category,priority,status,assigned_to,created_at"])
+                             ["id,title,category,priority,status,assigned_to,created_at,due_date"])
