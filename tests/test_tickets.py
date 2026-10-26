@@ -4,6 +4,8 @@ from campusflow.tickets import (
     calculate_priority,
     next_id,
     create_ticket,
+    days_until_due,
+    parse_due_date,
     search_tickets,
 )
 
@@ -83,3 +85,44 @@ class TestCreatedAtStamp(unittest.TestCase):
         tickets = []
         ticket = create_ticket("Slow laptop", "Hardware", "low", 1, tickets)
         date.fromisoformat(ticket["created_at"])  # raises if malformed
+
+
+class TestDueDates(unittest.TestCase):
+    def test_valid_due_date_is_normalized_iso(self):
+        self.assertEqual(parse_due_date(" 2026-11-01 "), "2026-11-01")
+
+    def test_blank_and_none_mean_no_due_date(self):
+        self.assertIsNone(parse_due_date(""))
+        self.assertIsNone(parse_due_date("   "))
+        self.assertIsNone(parse_due_date(None))
+
+    def test_wrong_format_raises(self):
+        with self.assertRaises(ValueError):
+            parse_due_date("01-11-2026")
+        with self.assertRaises(ValueError):
+            parse_due_date("tomorrow")
+
+    def test_past_date_raises(self):
+        with self.assertRaises(ValueError):
+            parse_due_date("2020-01-01")
+
+    def test_create_ticket_stores_due_date(self):
+        tickets = []
+        create_ticket("Lab projector", "Hardware", "medium", 5, tickets, due_date="2026-12-01")
+        self.assertEqual(tickets[0]["due_date"], "2026-12-01")
+
+    def test_create_ticket_without_due_date_is_none(self):
+        tickets = []
+        create_ticket("Wifi outage", "Network", "high", 12, tickets)
+        self.assertIsNone(tickets[0]["due_date"])
+
+    def test_days_until_due_counts_forward(self):
+        ticket = {"due_date": "2026-12-05"}
+        self.assertEqual(days_until_due(ticket, today=date(2026, 12, 1)), 4)
+
+    def test_days_until_due_can_be_overdue(self):
+        ticket = {"due_date": "2026-11-28"}
+        self.assertEqual(days_until_due(ticket, today=date(2026, 12, 1)), -3)
+
+    def test_days_until_due_none_without_date(self):
+        self.assertIsNone(days_until_due({}, today=date(2026, 12, 1)))

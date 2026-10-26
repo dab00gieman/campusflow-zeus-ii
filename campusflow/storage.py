@@ -54,6 +54,7 @@ def export_tickets_csv(tickets, path):
         "status",
         "assigned_to",
         "created_at",
+        "due_date",
     ]
     import csv
 

@@ -1,4 +1,4 @@
-from campusflow.tickets import create_ticket, search_tickets
+from campusflow.tickets import create_ticket, days_until_due, search_tickets
 from campusflow.workflow import (
     stale_tickets,
     get_ticket,
@@ -25,6 +25,15 @@ def display_ticket(ticket):
     print(f"Priority: {ticket['priority']}")
     print(f"Status: {ticket['status']}")
     print(f"Assigned to: {ticket['assigned_to'] or 'Unassigned'}")
+    due = days_until_due(ticket)
+    if due is None:
+        print("Due date: —")
+    elif due < 0:
+        print(f"Due date: {ticket['due_date']} (OVERDUE by {-due} day{'' if due == -1 else 's'})")
+    elif due == 0:
+        print(f"Due date: {ticket['due_date']} (due today)")
+    else:
+        print(f"Due date: {ticket['due_date']} (due in {due} day{'' if due == 1 else 's'})")
 
 
 def list_tickets(tickets):
@@ -43,6 +52,7 @@ def create_new_ticket(tickets):
     ).strip().title()
     urgency = input("Urgency (low/medium/high): ").strip().lower()
     affected_users = int(input("Number of affected users: "))
+    due_date = input("Due date (YYYY-MM-DD, blank for none): ").strip()
 
     ticket = create_ticket(
         title,
@@ -50,6 +60,7 @@ def create_new_ticket(tickets):
         urgency,
         affected_users,
         tickets,
+        due_date=due_date,
     )
 
     save_tickets(tickets, DATA_PATH)

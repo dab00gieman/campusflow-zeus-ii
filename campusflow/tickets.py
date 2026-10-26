@@ -1,4 +1,28 @@
-from datetime import date
+from datetime import date, datetime
+
+
+def parse_due_date(value):
+    """Validate a YYYY-MM-DD due date; empty/None means no due date."""
+    if value is None or (isinstance(value, str) and not value.strip()):
+        return None
+
+    try:
+        parsed = datetime.strptime(value.strip(), "%Y-%m-%d").date()
+    except ValueError as error:
+        raise ValueError("Due date must be YYYY-MM-DD") from error
+
+    if parsed < datetime.now().date():
+        raise ValueError("Due date cannot be in the past")
+    return parsed.isoformat()
+
+
+def days_until_due(ticket, today=None):
+    """Days until the ticket's due date; None when there is no due date."""
+    due = ticket.get("due_date")
+    if not due:
+        return None
+    today = today or datetime.now().date()
+    return (date.fromisoformat(due) - today).days
 
 
 def calculate_priority(urgency, affected_users):
@@ -26,7 +50,7 @@ def next_id(tickets):
     return f"T{highest_id + 1:03d}"
 
 
-def create_ticket(title, category, urgency, affected_users, tickets):
+def create_ticket(title, category, urgency, affected_users, tickets, due_date=None):
     if not isinstance(title, str) or not title.strip():
         raise ValueError("Title cannot be empty")
 
@@ -54,7 +78,8 @@ def create_ticket(title, category, urgency, affected_users, tickets):
         "priority": calculate_priority(urgency, affected_users),
         "status": "open",
         "assigned_to": None,
-        "created_at": date.today().isoformat()
+        "created_at": date.today().isoformat(),
+        "due_date": parse_due_date(due_date)
     }
 
     tickets.append(ticket)
