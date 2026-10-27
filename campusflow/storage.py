@@ -36,13 +36,19 @@ def save_tickets(tickets, path):
     os.replace(temp_path, file_path)
 
 
-def export_tickets_csv(tickets, path):
+def export_tickets_csv(tickets, path, status=None):
     """Write tickets to path as CSV, one row per ticket.
 
-    Returns the number of rows written. Fieldnames follow the ticket
-    schema; unknown extra keys are ignored, and csv quoting keeps
-    titles with commas intact.
+    Returns the number of rows written. An optional status
+    ("open", "in_progress", "resolved") exports only matching tickets;
+    an unknown status raises ValueError (library rule). Fieldnames
+    follow the ticket schema; unknown extra keys are ignored, and csv
+    quoting keeps titles with commas intact.
     """
+    if status is not None and status not in ("open", "in_progress", "resolved"):
+        raise ValueError("Invalid status filter")
+    if status is not None:
+        tickets = [t for t in tickets if t["status"] == status]
     file_path = Path(path)
     file_path.parent.mkdir(parents=True, exist_ok=True)
 
