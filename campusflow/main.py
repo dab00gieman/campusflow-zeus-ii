@@ -48,13 +48,28 @@ def display_ticket(ticket):
             print(f"  - [{note['created_at']}] {note['text']}")
 
 
-def list_tickets(tickets):
+def list_tickets(tickets, page=1, per_page=10):
+    """Print tickets one page at a time.
+
+    WHY pagination: real helpdesks accumulate hundreds of tickets;
+    printing them all makes the terminal scroll past the useful part.
+    Pages are 1-indexed; an out-of-range page is clamped.
+    """
     if not tickets:
         print("\nNo tickets found.")
         return
 
-    for ticket in tickets:
+    total_pages = -(-len(tickets) // per_page)
+    page = max(1, min(page, total_pages))
+    start = (page - 1) * per_page
+    for ticket in tickets[start:start + per_page]:
         display_ticket(ticket)
+
+    print(f"\n[Page {page} of {total_pages}]")
+    if page < total_pages:
+        answer = input("Show next page? (y/N): ").strip().lower()
+        if answer == "y":
+            list_tickets(tickets, page + 1, per_page)
 
 
 def create_new_ticket(tickets):
