@@ -195,7 +195,10 @@ def display_reports(tickets):
 
 def export_tickets_to_csv(tickets):
     path = input("Export path (default data/tickets.csv): ").strip() or "data/tickets.csv"
-    count = export_tickets_csv(tickets, path)
+    status = input(
+        "Filter by status (open/in_progress/resolved, blank for all): "
+    ).strip().lower() or None
+    count = export_tickets_csv(tickets, path, status=status)
     print(f"\nExported {count} ticket(s) to {path}.")
 
 
