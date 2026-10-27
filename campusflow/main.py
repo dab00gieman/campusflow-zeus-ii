@@ -232,6 +232,21 @@ def display_due_report(tickets):
             print(f"  {row['id']} [{row['priority']}] {row['title']} - {when}")
 
 
+def display_unassigned(tickets):
+    """CLI: tickets with no owner, oldest first."""
+    report = report_unassigned(tickets)
+    if report["count"] == 0:
+        print("\nNo unassigned tickets. Everyone has work.")
+        return
+    print(f"\nUnassigned tickets ({report['count']}):")
+    for row in report["tickets"]:
+        print(
+            f"  {row['id']} | {row['title']} | priority {row['priority']} "
+            f"| {row['status']} | {row['affected_users']} affected "
+            f"| created {row['created_at']}"
+        )
+
+
 def add_note_to_ticket(tickets):
     """CLI: append a note to a ticket by ID."""
     ticket_id = input("Ticket ID: ").strip().upper()
@@ -260,7 +275,8 @@ def display_menu():
     print("12. Export tickets to CSV")
     print("13. View due report (overdue + due soon)")
     print("14. Add note to ticket")
-    print("15. Exit")
+    print("15. View unassigned tickets")
+    print("16. Exit")
     print("================================")
 
 
@@ -321,11 +337,14 @@ def main():
                 add_note_to_ticket(tickets)
 
             elif choice == "15":
+                display_unassigned(tickets)
+
+            elif choice == "16":
                 print("Thanks for using CampusFlow. Goodbye!")
                 break
 
             else:
-                print("Invalid option. Choose a number from 1 to 15.")
+                print("Invalid option. Choose a number from 1 to 16.")
 
         except (ValueError, OSError) as error:
             print(f"Error: {error}")

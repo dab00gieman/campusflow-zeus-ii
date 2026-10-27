@@ -105,3 +105,30 @@ def report_by_assignee(tickets):
     rows = list(load.values())
     rows.sort(key=lambda row: (-(row["open"] + row["in_progress"]), row["staff"]))
     return rows
+
+def report_unassigned(tickets):
+    """Unassigned work report: actionable tickets nobody owns.
+
+    WHY a report and not a filter: unassigned + unresolved tickets are
+    exactly the ones that silently fall through the cracks; the view
+    exists to make them impossible to miss. Oldest first, most-affected
+    first within a day.
+    """
+    rows = []
+    for ticket in tickets:
+        if ticket["status"] == "resolved" or ticket.get("assigned_to"):
+            continue
+        rows.append(
+            {
+                "id": ticket["id"],
+                "title": ticket["title"],
+                "priority": ticket["priority"],
+                "status": ticket["status"],
+                "created_at": ticket["created_at"],
+                "affected_users": ticket["affected_users"],
+            }
+        )
+    rows.sort(
+        key=lambda row: (row["created_at"], -row["affected_users"])
+    )
+    return {"count": len(rows), "tickets": rows}
