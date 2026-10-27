@@ -1,6 +1,6 @@
 import unittest
-from campusflow.reports import (
-    report_by_assignee, report_summary, report_by_category)
+from datetime import date, timedelta
+from campusflow.reports import report_by_assignee, report_by_category, report_due, report_summary
 
 class TestReports(unittest.TestCase):
     def test_summary_with_tickets(self):
@@ -101,3 +101,63 @@ class ReportByAssigneeTest(unittest.TestCase):
         rows = report_by_assignee([
             self._ticket("zoe", "open"), self._ticket("ada", "open")])
         self.assertEqual([r["staff"] for r in rows], ["ada", "zoe"])
+
+
+class TestReportDue(unittest.TestCase):
+    TODAY = date(2026, 10, 27)
+
+    def ticket(self, days_offset):
+        return {
+            "id": "T00%d" % abs(days_offset),
+            "title": "T-%d" % days_offset,
+            "priority": "high",
+            "status": "open",
+            "due_date": (self.TODAY + timedelta(days=days_offset)).isoformat(),
+        }
+
+    def test_overdue_lands_in_overdue_window(self):
+        report = report_due([self.ticket(-2)], today=self.TODAY)
+        self.assertEqual(report["overdue_count"], 1)
+        self.assertEqual(report["due_soon_count"], 0)
+        self.assertEqual(report["overdue"][0]["days"], -2)
+
+    def test_due_soon_within_boundary(self):
+        report = report_due([self.ticket(0), self.ticket(3)], today=self.TODAY)
+        self.assertEqual(report["due_soon_count"], 2)
+        self.assertEqual([r["days"] for r in report["due_soon"]], [0, 3])
+
+    def test_beyond_window_excluded(self):
+        report = report_due([self.ticket(4)], today=self.TODAY)
+        self.assertEqual(report["overdue_count"] + report["due_soon_count"], 0)
+
+    def test_resolved_excluded_even_when_overdue(self):
+        resolved = self.ticket(-2)
+        resolved["status"] = "resolved"
+        report = report_due([resolved], today=self.TODAY)
+        self.assertEqual(report["overdue_count"], 0)
+
+    def test_no_due_date_excluded(self):
+        ticket = self.ticket(-2)
+        ticket["due_date"] = None
+        report = report_due([ticket], today=self.TODAY)
+        self.assertEqual(report["overdue_count"] + report["due_soon_count"], 0)
+
+    def test_sorted_most_urgent_first(self):
+        report = report_due(
+            [self.ticket(-1), self.ticket(-5), self.ticket(1)],
+            today=self.TODAY,
+        )
+        self.assertEqual([r["days"] for r in report["overdue"]], [-5, -1])
+        self.assertEqual([r["days"] for r in report["due_soon"]], [1])
+
+    def test_row_shape_carries_report_fields(self):
+        report = report_due([self.ticket(-2)], today=self.TODAY)
+        row = report["overdue"][0]
+        self.assertEqual(
+            set(row),
+            {"id", "title", "priority", "status", "due_date", "days"},
+        )
+
+    def test_custom_today_drives_classification(self):
+        report = report_due([self.ticket(2)], today=self.TODAY + timedelta(days=4))
+        self.assertEqual(report["overdue_count"], 1)

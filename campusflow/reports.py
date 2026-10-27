@@ -1,3 +1,46 @@
+from campusflow.tickets import days_until_due
+
+
+def report_due(tickets, within_days=3, today=None):
+    """Due-date report: overdue tickets and tickets due within `within_days`.
+
+    WHY resolved tickets are excluded: the report exists to surface
+    work that still needs action; a resolved ticket needs none. Rows
+    carry the days offset (negative = overdue) so the CLI can phrase
+    each line. Mirrors the design shipped in campusflow-hades-ii #26.
+    """
+    rows = []
+    for ticket in tickets:
+        if ticket["status"] == "resolved":
+            continue
+        days = days_until_due(ticket, today=today)
+        if days is None:
+            continue
+        rows.append({
+            "id": ticket["id"],
+            "title": ticket["title"],
+            "priority": ticket["priority"],
+            "status": ticket["status"],
+            "due_date": ticket["due_date"],
+            "days": days,
+        })
+
+    overdue = sorted(
+        (row for row in rows if row["days"] < 0), key=lambda row: row["days"]
+    )
+    due_soon = sorted(
+        (row for row in rows if 0 <= row["days"] <= within_days),
+        key=lambda row: row["days"],
+    )
+
+    return {
+        "overdue": overdue,
+        "due_soon": due_soon,
+        "overdue_count": len(overdue),
+        "due_soon_count": len(due_soon),
+    }
+
+
 def report_summary(tickets):
     status_counts = {
         "open": 0,
