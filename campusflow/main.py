@@ -1,3 +1,4 @@
+from campusflow.notes import add_note, get_notes
 from campusflow.tickets import create_ticket, days_until_due, search_tickets
 from campusflow.workflow import (
     stale_tickets,
@@ -39,6 +40,12 @@ def display_ticket(ticket):
         print(f"Due date: {ticket['due_date']} (due today)")
     else:
         print(f"Due date: {ticket['due_date']} (due in {due} day{'' if due == 1 else 's'})")
+
+    notes = get_notes(ticket)
+    if notes:
+        print(f"Notes ({len(notes)}):")
+        for note in notes:
+            print(f"  - [{note['created_at']}] {note['text']}")
 
 
 def list_tickets(tickets):
@@ -225,6 +232,18 @@ def display_due_report(tickets):
             print(f"  {row['id']} [{row['priority']}] {row['title']} - {when}")
 
 
+def add_note_to_ticket(tickets):
+    """CLI: append a note to a ticket by ID."""
+    ticket_id = input("Ticket ID: ").strip().upper()
+    ticket = get_ticket(tickets, ticket_id)
+
+    text = input("Note text: ")
+    add_note(ticket, text)
+
+    save_tickets(tickets, DATA_PATH)
+    print(f"\nNote added to ticket {ticket_id}.")
+
+
 def display_menu():
     print("\n========== CAMPUSFLOW ==========")
     print("1. Create ticket")
@@ -240,7 +259,8 @@ def display_menu():
     print("11. View staff workload")
     print("12. Export tickets to CSV")
     print("13. View due report (overdue + due soon)")
-    print("14. Exit")
+    print("14. Add note to ticket")
+    print("15. Exit")
     print("================================")
 
 
@@ -298,11 +318,14 @@ def main():
                 display_due_report(tickets)
 
             elif choice == "14":
+                add_note_to_ticket(tickets)
+
+            elif choice == "15":
                 print("Thanks for using CampusFlow. Goodbye!")
                 break
 
             else:
-                print("Invalid option. Choose a number from 1 to 14.")
+                print("Invalid option. Choose a number from 1 to 15.")
 
         except (ValueError, OSError) as error:
             print(f"Error: {error}")
